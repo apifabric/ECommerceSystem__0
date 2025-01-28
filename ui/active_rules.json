@@ -1,0 +1,52 @@
+[
+    {
+        "name": "Customer Balance Constraint",
+        "description": "The Customer's balance is less than the credit limit",
+        "use_case": "Check Credit",
+        "code": "Rule.constraint(validate=Customer,\n                as_condition=lambda row: row.balance <= row.credit_limit,\n                error_msg=\"Customer's balance ({row.balance}) exceeds credit limit ({row.credit_limit})\")",
+        "error": null,
+        "status": "active",
+        "entity": "Customer",
+        "id": "01JJNTSSG8B5BPAQF2PASYGGJ2"
+    },
+    {
+        "name": "Customer Balance Sum",
+        "description": "The Customer's balance is the sum of the Order amount_total where date_shipped is null.",
+        "use_case": "Check Credit",
+        "code": "Rule.sum(derive=Customer.balance, as_sum_of=Order.amount_total, where=lambda row: row.date_shipped is None)",
+        "error": null,
+        "status": "active",
+        "entity": "Customer",
+        "id": "01JJNTSSGEF03G937AVEPKKCXP"
+    },
+    {
+        "name": "Order Amount Total Sum",
+        "description": "The Order's amount_total is the sum of the Item amount.",
+        "use_case": "Check Credit",
+        "code": "Rule.sum(derive=Order.amount_total, as_sum_of=Item.amount)",
+        "error": null,
+        "status": "active",
+        "entity": "Order",
+        "id": "01JJNTSSGHEDTC398NW0S0TT8N"
+    },
+    {
+        "name": "Item Amount Formula",
+        "description": "The Item amount is the quantity * unit_price.",
+        "use_case": "Check Credit",
+        "code": "Rule.formula(derive=Item.amount, as_expression=lambda row: row.quantity * row.unit_price)",
+        "error": null,
+        "status": "active",
+        "entity": "Item",
+        "id": "01JJNTSSGM9GB4MD9W21ZGYXD1"
+    },
+    {
+        "name": "Item Unit Price Copy",
+        "description": "The Item unit_price is copied from the Product unit_price.",
+        "use_case": "Check Credit",
+        "code": "Rule.copy(derive=Item.unit_price, from_parent=Product.unit_price)",
+        "error": null,
+        "status": "active",
+        "entity": "Item",
+        "id": "01JJNTSSGPMY7JJFB9T4DTT2GM"
+    }
+]
