@@ -1,0 +1,323 @@
+"models":
+- "classname": |-
+    Customer
+  "code": |-
+    class Customer(Base):
+        __tablename__ = 'customer'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        name = Column(String)
+        credit_limit = Column(Integer)
+        balance = Column(Integer)
+        orders = relationship("Order", back_populates="customer")
+  "description": |-
+    Represents a customer entity that holds information about customers.
+  "name": |-
+    Customer
+- "classname": |-
+    Order
+  "code": |-
+    class Order(Base):
+        __tablename__ = 'order'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        customer_id = Column(ForeignKey('customer.id'))
+        date_shipped = Column(DateTime)
+        amount_total = Column(Integer)
+        notes = Column(String)
+        customer = relationship('Customer', back_populates='orders')
+        items = relationship('Item', back_populates='order')
+  "description": |-
+    Represents an order entity containing order-related information such as notes and total amount.
+  "name": |-
+    Order
+- "classname": |-
+    Item
+  "code": |-
+    class Item(Base):
+        __tablename__ = 'item'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        order_id = Column(ForeignKey('order.id'))
+        product_id = Column(ForeignKey('product.id'))
+        quantity = Column(Integer)
+        unit_price = Column(Integer)
+        amount = Column(Integer)
+        order = relationship('Order', back_populates='items')
+        product = relationship('Product', back_populates='items')
+  "description": |-
+    Represents an item in an order, associated with a product and an order.
+  "name": |-
+    Item
+- "classname": |-
+    Product
+  "code": |-
+    class Product(Base):
+        __tablename__ = 'product'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        name = Column(String)
+        unit_price = Column(Integer)
+        items = relationship('Item', back_populates='product')
+  "description": |-
+    Represents a product that can be ordered.
+  "name": |-
+    Product
+- "classname": |-
+    Category
+  "code": |-
+    class Category(Base):
+        __tablename__ = 'category'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        name = Column(String)
+        products = relationship('Product', back_populates='category')
+  "description": |-
+    Represents a category for products.
+  "name": |-
+    Category
+- "classname": |-
+    Supplier
+  "code": |-
+    class Supplier(Base):
+        __tablename__ = 'supplier'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        name = Column(String)
+        products = relationship('Product', back_populates='supplier')
+  "description": |-
+    Represents a supplier of products.
+  "name": |-
+    Supplier
+- "classname": |-
+    Warehouse
+  "code": |-
+    class Warehouse(Base):
+        __tablename__ = 'warehouse'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        location = Column(String)
+        stock_items = relationship('StockItem', back_populates='warehouse')
+  "description": |-
+    Represents a warehouse storing inventory.
+  "name": |-
+    Warehouse
+- "classname": |-
+    StockItem
+  "code": |-
+    class StockItem(Base):
+        __tablename__ = 'stock_item'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        product_id = Column(ForeignKey('product.id'))
+        warehouse_id = Column(ForeignKey('warehouse.id'))
+        quantity = Column(Integer)
+        warehouse = relationship('Warehouse', back_populates='stock_items')
+  "description": |-
+    Represents stock of a product in a warehouse.
+  "name": |-
+    StockItem
+- "classname": |-
+    Employee
+  "code": |-
+    class Employee(Base):
+        __tablename__ = 'employee'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        name = Column(String)
+        years_of_service = Column(Integer)
+        skill_summary = Column(Integer)
+  "description": |-
+    Represents an employee within the company.
+  "name": |-
+    Employee
+- "classname": |-
+    EmployeeSkill
+  "code": |-
+    class EmployeeSkill(Base):
+        __tablename__ = 'employee_skill'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        employee_id = Column(ForeignKey('employee.id'))
+        rating = Column(Integer)
+  "description": |-
+    Represents the skill and rating of an employee.
+  "name": |-
+    EmployeeSkill
+- "classname": |-
+    Branch
+  "code": |-
+    class Branch(Base):
+        __tablename__ = 'branch'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        location = Column(String)
+  "description": |-
+    Represents a company branch location.
+  "name": |-
+    Branch
+- "classname": |-
+    BranchManager
+  "code": |-
+    class BranchManager(Base):
+        __tablename__ = 'branch_manager'
+        id = Column(Integer, primary_key=True, autoincrement=True)
+        branch_id = Column(ForeignKey('branch.id'))
+        employee_id = Column(ForeignKey('employee.id'))
+  "description": |-
+    Represents a manager for a branch of the company.
+  "name": |-
+    BranchManager
+"name": |-
+  ECommerceSystem
+"rules":
+- "code": |-
+    Rule.constraint(validate=Customer,
+                    as_condition=lambda row: row.balance <= row.credit_limit,
+                    error_msg="Customer's balance ({row.balance}) exceeds credit limit ({row.credit_limit})")
+  "description": |-
+    The Customer's balance is less than the credit limit
+  "entity": |-
+    Customer
+  "name": |-
+    Customer Balance Constraint
+  "use_case": |-
+    Check Credit
+- "code": |-
+    Rule.sum(derive=Customer.balance, as_sum_of=Order.amount_total, where=lambda row: row.date_shipped is None)
+  "description": |-
+    The Customer's balance is the sum of the Order amount_total where date_shipped is null.
+  "entity": |-
+    Customer
+  "name": |-
+    Customer Balance Sum
+  "use_case": |-
+    Check Credit
+- "code": |-
+    Rule.sum(derive=Order.amount_total, as_sum_of=Item.amount)
+  "description": |-
+    The Order's amount_total is the sum of the Item amount.
+  "entity": |-
+    Order
+  "name": |-
+    Order Amount Total Sum
+  "use_case": |-
+    Check Credit
+- "code": |-
+    Rule.formula(derive=Item.amount, as_expression=lambda row: row.quantity * row.unit_price)
+  "description": |-
+    The Item amount is the quantity * unit_price.
+  "entity": |-
+    Item
+  "name": |-
+    Item Amount Formula
+  "use_case": |-
+    Check Credit
+- "code": |-
+    Rule.copy(derive=Item.unit_price, from_parent=Product.unit_price)
+  "description": |-
+    The Item unit_price is copied from the Product unit_price.
+  "entity": |-
+    Item
+  "name": |-
+    Item Unit Price Copy
+  "use_case": |-
+    Check Credit
+"test_data": |-
+  # Test data for Customer
+  customer1 = Customer(name="Alice", credit_limit=1000, balance=300)
+  customer2 = Customer(name="Bob", credit_limit=1500, balance=700)
+  customer3 = Customer(name="Charlie", credit_limit=2000, balance=1000)
+  customer4 = Customer(name="David", credit_limit=2500, balance=0)
+
+  # Test data for Product
+  product1 = Product(name="Laptop", unit_price=1200)
+  product2 = Product(name="Monitor", unit_price=300)
+  product3 = Product(name="Mouse", unit_price=50)
+  product4 = Product(name="Keyboard", unit_price=70)
+
+  # Test data for Order
+  order1 = Order(customer_id=1, date_shipped=None, amount_total=0, notes="First order")
+  order2 = Order(customer_id=2, date_shipped=date(2023, 5, 10), amount_total=0, notes="Second order")
+  order3 = Order(customer_id=3, date_shipped=None, amount_total=0, notes="Third order")
+  order4 = Order(customer_id=4, date_shipped=date(2023, 8, 15), amount_total=0, notes="Fourth order")
+
+  # Test data for Item
+  item1 = Item(order_id=1, product_id=1, quantity=1, unit_price=1200, amount=1200)
+  item2 = Item(order_id=2, product_id=2, quantity=2, unit_price=300, amount=600)
+  item3 = Item(order_id=3, product_id=3, quantity=5, unit_price=50, amount=250)
+  item4 = Item(order_id=4, product_id=4, quantity=7, unit_price=70, amount=490)
+"test_data_rows":
+- "code": |-
+    customer1 = Customer(name="Alice", credit_limit=1000, balance=300)
+  "test_data_row_variable": |-
+    customer1
+- "code": |-
+    customer2 = Customer(name="Bob", credit_limit=1500, balance=700)
+  "test_data_row_variable": |-
+    customer2
+- "code": |-
+    customer3 = Customer(name="Charlie", credit_limit=2000, balance=1000)
+  "test_data_row_variable": |-
+    customer3
+- "code": |-
+    customer4 = Customer(name="David", credit_limit=2500, balance=0)
+  "test_data_row_variable": |-
+    customer4
+- "code": |-
+    product1 = Product(name="Laptop", unit_price=1200)
+  "test_data_row_variable": |-
+    product1
+- "code": |-
+    product2 = Product(name="Monitor", unit_price=300)
+  "test_data_row_variable": |-
+    product2
+- "code": |-
+    product3 = Product(name="Mouse", unit_price=50)
+  "test_data_row_variable": |-
+    product3
+- "code": |-
+    product4 = Product(name="Keyboard", unit_price=70)
+  "test_data_row_variable": |-
+    product4
+- "code": |-
+    order1 = Order(customer_id=1, date_shipped=None, amount_total=0, notes="First order")
+  "test_data_row_variable": |-
+    order1
+- "code": |-
+    order2 = Order(customer_id=2, date_shipped=date(2023, 5, 10), amount_total=0, notes="Second order")
+  "test_data_row_variable": |-
+    order2
+- "code": |-
+    order3 = Order(customer_id=3, date_shipped=None, amount_total=0, notes="Third order")
+  "test_data_row_variable": |-
+    order3
+- "code": |-
+    order4 = Order(customer_id=4, date_shipped=date(2023, 8, 15), amount_total=0, notes="Fourth order")
+  "test_data_row_variable": |-
+    order4
+- "code": |-
+    item1 = Item(order_id=1, product_id=1, quantity=1, unit_price=1200, amount=1200)
+  "test_data_row_variable": |-
+    item1
+- "code": |-
+    item2 = Item(order_id=2, product_id=2, quantity=2, unit_price=300, amount=600)
+  "test_data_row_variable": |-
+    item2
+- "code": |-
+    item3 = Item(order_id=3, product_id=3, quantity=5, unit_price=50, amount=250)
+  "test_data_row_variable": |-
+    item3
+- "code": |-
+    item4 = Item(order_id=4, product_id=4, quantity=7, unit_price=70, amount=490)
+  "test_data_row_variable": |-
+    item4
+"test_data_sqlite": |-
+  INSERT INTO customer (name, credit_limit, balance) VALUES ("Alice", 1000, 300);
+  INSERT INTO customer (name, credit_limit, balance) VALUES ("Bob", 1500, 700);
+  INSERT INTO customer (name, credit_limit, balance) VALUES ("Charlie", 2000, 1000);
+  INSERT INTO customer (name, credit_limit, balance) VALUES ("David", 2500, 0);
+
+  INSERT INTO product (name, unit_price) VALUES ("Laptop", 1200);
+  INSERT INTO product (name, unit_price) VALUES ("Monitor", 300);
+  INSERT INTO product (name, unit_price) VALUES ("Mouse", 50);
+  INSERT INTO product (name, unit_price) VALUES ("Keyboard", 70);
+
+  INSERT INTO order (customer_id, date_shipped, amount_total, notes) VALUES (1, NULL, 0, "First order");
+  INSERT INTO order (customer_id, date_shipped, amount_total, notes) VALUES (2, '2023-05-10', 0, "Second order");
+  INSERT INTO order (customer_id, date_shipped, amount_total, notes) VALUES (3, NULL, 0, "Third order");
+  INSERT INTO order (customer_id, date_shipped, amount_total, notes) VALUES (4, '2023-08-15', 0, "Fourth order");
+
+  INSERT INTO item (order_id, product_id, quantity, unit_price, amount) VALUES (1, 1, 1, 1200, 1200);
+  INSERT INTO item (order_id, product_id, quantity, unit_price, amount) VALUES (2, 2, 2, 300, 600);
+  INSERT INTO item (order_id, product_id, quantity, unit_price, amount) VALUES (3, 3, 5, 50, 250);
+  INSERT INTO item (order_id, product_id, quantity, unit_price, amount) VALUES (4, 4, 7, 70, 490);
